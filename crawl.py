@@ -1,11 +1,31 @@
 import urllib2
+import os
 from bs4 import BeautifulSoup
 from collections import deque
 from urlparse import urlparse,urljoin
+from shutil import copy2
 
 link = deque()
 link.append('http://docs.python.org/tutorial/datastructures.html')
 visited = []
+
+def get_file(url, remote_file):
+	file_name = url.split('/')[-1]
+#	if url.find('.html') + 1:
+#		return
+#	remote_file = urllib2.urlopen(url)
+	o = urlparse(url)
+	temp = o.path
+	temp = '/home/karthik/Projects/crawl' + temp
+	ind = temp.find(file_name)
+	temp1 = temp[:ind]
+	if not os.path.exists(temp1):
+		os.makedirs(temp1)
+	ext = open(temp, 'w')
+	ext.write(remote_file)
+	ext.close()
+	#local.append(temp)
+	visited.append(url)
 
 
 def link_collect(url):
@@ -30,8 +50,19 @@ def link_collect(url):
 				if o.netloc == 'docs.python.org':
 					if o.geturl() not in visited:
 						link.append(o.geturl())
+			get_file(url,html_doc)
 			ext_files = soup.find_all('link', rel='stylesheet') + soup.find_all('script')
-			
+			for j in ext_files:
+				try:
+					temp = j['src']
+				except KeyError:
+					try:
+						temp = j['href']
+					except KeyError:
+						continue
+				temp1 = urljoin(url,temp)
+				if temp1 in visited:
+					continue
 
 
 
