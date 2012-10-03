@@ -3,20 +3,17 @@ import os
 from bs4 import BeautifulSoup
 from collections import deque
 from urlparse import urlparse,urljoin
-from shutil import copy2
 
+location = '/var/www/pydocs/'
 link = deque()
 link.append('http://docs.python.org/tutorial/datastructures.html')
 visited = []
 
 def get_file(url, remote_file):
 	file_name = url.split('/')[-1]
-#	if url.find('.html') + 1:
-#		return
-#	remote_file = urllib2.urlopen(url)
 	o = urlparse(url)
 	temp = o.path
-	temp = '/home/karthik/Projects/crawl' + temp
+	temp = location + temp
 	ind = temp.find(file_name)
 	temp1 = temp[:ind]
 	if not os.path.exists(temp1):
@@ -24,8 +21,6 @@ def get_file(url, remote_file):
 	ext = open(temp, 'w')
 	ext.write(remote_file)
 	ext.close()
-	#local.append(temp)
-	visited.append(url)
 
 
 def link_collect(url):
@@ -35,7 +30,11 @@ def link_collect(url):
 	visited.append(url)
 	response = urllib2.urlopen(url)
 	html_doc = response.read()
-	soup = BeautifulSoup(html_doc)
+	get_file(url,html_doc)
+	if url.find('.html') + 1:
+		soup = BeautifulSoup(html_doc)
+	else:
+		return
 	for hRef in soup.find_all('a'):
 		try:
 			hRef['href']
@@ -50,8 +49,7 @@ def link_collect(url):
 				if o.netloc == 'docs.python.org':
 					if o.geturl() not in visited:
 						link.append(o.geturl())
-			get_file(url,html_doc)
-			ext_files = soup.find_all('link', rel='stylesheet') + soup.find_all('script')
+			ext_files = soup.find_all('link') + soup.find_all('script')
 			for j in ext_files:
 				try:
 					temp = j['src']
@@ -63,6 +61,8 @@ def link_collect(url):
 				temp1 = urljoin(url,temp)
 				if temp1 in visited:
 					continue
+				else:
+					link.append(temp1)
 
 
 
@@ -76,5 +76,3 @@ while (link):
 	else:
 		if i!=-1:
 			print len(visited)
-
-print visited
